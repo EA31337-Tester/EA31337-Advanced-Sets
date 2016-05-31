@@ -1,0 +1,13 @@
+[alias]
+  env = !env
+
+[core]
+  ; detect and raise errors about trailing spaces and spaces before tabs
+  whitespace = trailing-space,space-before-tab
+  autocrlf   = false
+
+[color]
+  ui = auto
+
+[push]
+	default = current
