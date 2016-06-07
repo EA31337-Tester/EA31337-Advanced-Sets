@@ -1,0 +1,65 @@
+language: generic
+sudo: required
+dist: trusty
+env:
+  global:
+  - OWNER='EA31337'
+  - EA_MODE='Advanced'
+  - EA_VERSION='v1.069'
+  - USER=${TRAVIS_REPO_SLUG%%/*}
+  - REPOSITORY=${TRAVIS_REPO_SLUG##*/}
+  - PUSH_BRANCH="EA-$(date +%Y%m%d)"
+  - CWD="$TRAVIS_BUILD_DIR"
+  - VM_DIR="$CWD/_VM"
+  - EA_DIR="$VM_DIR/EA"
+  - PATH="$PATH:$CWD/_scripts:$CWD/_VM/scripts"
+  - secure: aNkvbBQmr6utT0ZE5FFKWZQEgW9t4GTC+pOmZo5p1WIjdInv7d2QN6Xu2mqU5EQTcMCqks1Ai5hVo0U7ex+nymfJshFm2zAfsKDWuBVI6sSsJVBdvyAkYWEEIO7uxILfhX3NIyVlUKSLTLNcAlMvP40NyPQSBF7UR07jOGWw16/GMzhkt4qc0TwRe3Ov039ZEbJQJS/BF94ebhB/XJ/1UnngToPVebOyPdhA0eQTATBG2zQrVBip1zdmnCzq96QiW36fx23Ivk1qWTQ1mTAW4xZ1SXuEKchNAoijEmrHc7e56I8TgB8ZpPDKX7Ay4sbS+frnkCW7fkRVZx4pGHIUM8pNVlYrMQMb/DoDvKMYSkb62n74rsVnvKocygG9y/EZYvYnU5UIY1K5OawO1T2L5Hb9spvnJws5Nu5//XVfBl1iBAsf29yGgUB2IuvN48EshfzGoNuzd6i1lxV9EqhRXup/dP5k+KR6ZGG/qrcSbFm/FuTJnu9BACZU10DQAUHhPboSBh3HaUZAJVzp8VHoauG35lH3DQiOXCfp2ic5hTNIPZDiLLOQNBHf5iHdvW8VMOYIiLp1NFWQAKIzwkCB06NJG00+4FAlmMNHFcrG6NEQf+ry9+DSaqbOBmfT1CvRrbBFD3j+knMGdBrvJlYdTnrXnfFf6DiJA258QqI6dAw=
+  matrix:
+  - INI=EURUSD/default/10-spread/5-digits/2014/test.ini
+addons:
+  hosts:
+  - travis.local
+matrix:
+  fast_finish: true
+cache:
+  apt: true
+  pip: true
+  # directories: "$HOME/.wine"
+notifications:
+  email: true
+  webhooks:
+    urls:
+    - https://webhooks.gitter.im/e/2c50114866dd0ba72f48
+    on_success: change
+    on_failure: always
+    on_start: never
+before_install:
+- set -e
+- get_gh_asset.sh $OWNER $OWNER-$EA_MODE-Releases $EA_VERSION $EA_MODE-Backtest "$EA_DIR"
+install:
+- sudo env PATH="$PATH" provision.sh
+- sudo env PATH="$PATH" secur32_fix.sh
+before_script:
+- find "$CWD" -name "*.rules" -exec bash -n "{}" ';'
+script:
+- run_test.sh "$INI"
+after_success:
+- echo "Success."
+after_failure:
+- tree -dL 3 ~/
+- find ~/.wine -name "*.log" -print -execdir tail "{}" ';'
+after_script:
+- pwd
+before_deploy:
+- echo before_deploy
+deploy:
+  provider: releases
+  api_key:
+    secure: kIR+7pAs2azqxStW6fv9z1WwukKcGKzpvX0k6ZD+ql5TuErqVLSXHv4gHLVSZRKYBIORNVn9YKyOrNBPpz1n3dZL13fjBvmwLKTDsU27E3IUdl4mencxxD5ogkUUYrUX43zfI4oibQ3vWv1Favw/VWWWgcFNZebrV6vzq0kqPLSHntXIVunveEk967qniwFppHAIiDZxgrsXF7ZaAL5nKFrrjZGUZz5nfGFbPqXgPBH6cmKvW/5Y2j5u70b1M/p6CcfL2vpI6Iw4INoQw4YfmAkmpwvhv3fjJMPHt4+bvIFuz2v/3KctYyQmNndvpo7BcbNZOxfxph9Va3zpiA720IzOQE4zQYdFkQswDoVrWgewTpGGOXo6F+1aWVAF6JcRKAkr9nWMWuuxLtsbbrwMru748IVJNJEGaLN+pXeqxCjHRv99IbxwcmqU8TwUM+hSzNY+q5Yji9TWqDllsKevyQvR6l+CfxcOKRyzNNvbDaSsPW8OCJyk/7cfWDjkJTrpwYGsY/i9ZP8I5D0zbQX5dX+8+u1qz8nlQ5Tml0PG3SkmeJAylm6Ewg1Kc16KTvz8dBwT/mxKCaMLkd4Pow2Nbu6khXcyLP7ue/IyR1Soe7Dd4Dc8IMy+BY7FGE/pKEW3juGEuP1WvX8F8H3sY8rLjHwSePMB0Wo9N3FQsNbRhHw=
+  file:
+  - "results/*.txt"
+  - "results/*.gif"
+  - "results/*.set"
+  on:
+    repo: EA31337/EA31337-Advanced-Sets
+    tags: true
