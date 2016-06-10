@@ -24,7 +24,7 @@ matrix:
 cache:
   apt: true
   pip: true
-  # directories: "$HOME/.wine"
+  directories: "$HOME/.wine"
 notifications:
   email: true
   webhooks:
@@ -42,7 +42,7 @@ install:
 before_script:
 - find "$CWD" -name "*.rules" -exec bash -n "{}" ';'
 script:
-- run_test.sh "$INI"
+- run_test.sh "$INI" -E VerboseInfo=0
 after_success:
 - echo "Success."
 after_failure:
